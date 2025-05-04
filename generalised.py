@@ -85,7 +85,7 @@ with st.sidebar:
 
     # ---- Outdoor cycling section ----
     outdoor_minutes = st.number_input("Outdoor cycling (mins)", min_value=0, value=0, step=5)
-    effort_label = st.selectbox("Outdoor effort", ["Easy", "Moderate", "Hard"], index=1)
+    effort_label = st.selectbox("Outdoor cycling effort", ["Easy", "Moderate", "Hard"], index=1)
     effort_factor = {"Easy": 5, "Moderate": 7, "Hard": 10}[effort_label]
 
     jog_km = st.number_input("Jog distance (km)", min_value=0.0, value=0.0, step=0.5)
