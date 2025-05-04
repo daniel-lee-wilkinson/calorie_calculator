@@ -113,6 +113,20 @@ if calculate:
     col2.metric("📉 Daily deficit", f"{breakdown['Daily Deficit']} kcal")
     col3.metric("🚴‍♂️ Total activity", f"{breakdown['Total Activity Burn']} kcal")
 
+    # ⁉️ Acronym guide
+    with st.expander("ℹ️ What do these terms mean?"):
+        st.markdown(
+            """
+            **BMR** – Basal Metabolic Rate (energy your body needs at complete rest).
+
+            **kcal** – Kilocalories, common unit of food energy (1 kcal = 1,000 calories).
+
+            **Daily deficit** – Energy gap between your maintenance calories and what you consume. A deficit is required for weight loss.
+
+            **Total activity** – Estimated calories burned through today's recorded activities (steps, jogging, gym, etc.).
+            """
+        )
+
     if target < bmr:
         st.warning(
             f"⚠️ Your target ({target} kcal) is below your estimated BMR ({bmr} kcal)."
@@ -144,5 +158,5 @@ if calculate:
     with st.expander("🔍 Full breakdown"):
         st.json(breakdown)
 
-# ------------------- Footer -------------------
+# ------------------- Footer ------------------- -------------------
 st.caption("Made with ❤️ using Streamlit | Calculations are estimates and should not be taken as medical advice.")
