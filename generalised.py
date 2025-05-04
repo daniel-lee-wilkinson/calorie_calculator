@@ -33,7 +33,8 @@ def calorie_target(
     jog_km: float = 0.0,
     jog_kph: float = 11.0,
     gym_minutes: int = 0,
-    bike_commute_km: float = 0.0,
+    outdoor_minutes: int = 0,
+    outdoor_effort_factor: int = 7,
 ):
     """Return suggested intake, BMR and breakdown dict."""
 
@@ -45,12 +46,12 @@ def calorie_target(
 
     # Activity burns
     step_burn = 0.04 * steps
-    zwift_burn = 8 * zwift_minutes
+    zwift_burn = 8 * zwift_minutes  # keep as‑is
     jog_burn = jog_km * 65 * (jog_kph / 11.0)
     gym_burn = 6 * gym_minutes
-    commute_burn = 25 * (bike_commute_km / 2)
+    outdoor_burn = outdoor_minutes * outdoor_effort_factor
 
-    activity_burn = step_burn + zwift_burn + jog_burn + gym_burn + commute_burn
+    activity_burn = step_burn + zwift_burn + jog_burn + gym_burn + outdoor_burn
 
     suggested_intake = maintenance - daily_deficit + (activity_burn * 0.5)
 
@@ -64,7 +65,7 @@ def calorie_target(
             "Zwift Burn": round(zwift_burn),
             "Jog Burn": round(jog_burn),
             "Gym Burn": round(gym_burn),
-            "Bike Commute Burn": round(commute_burn),
+            "Outdoor Cycling Burn": round(outdoor_burn),
             "Total Activity Burn": round(activity_burn),
             "Net Calorie Target": ceil(suggested_intake),
         },
@@ -81,10 +82,15 @@ with st.sidebar:
     st.subheader("🏃‍♀️ Today's Activity")
     steps = st.number_input("Steps walked", min_value=0, value=10000, step=500)
     zwift_minutes = st.number_input("Zwift cycling (mins)", min_value=0, value=0, step=5)
+
+    # ---- Outdoor cycling section ----
+    outdoor_minutes = st.number_input("Outdoor cycling (mins)", min_value=0, value=0, step=5)
+    effort_label = st.selectbox("Outdoor effort", ["Easy", "Moderate", "Hard"], index=1)
+    effort_factor = {"Easy": 5, "Moderate": 7, "Hard": 10}[effort_label]
+
     jog_km = st.number_input("Jog distance (km)", min_value=0.0, value=0.0, step=0.5)
     jog_kph = st.number_input("Avg jog speed (km/h)", min_value=6.0, max_value=16.0, value=11.0, step=0.5)
     gym_minutes = st.number_input("Strength‑training (mins)", min_value=0, value=0, step=5)
-    bike_commute_km = st.number_input("Bike commute (km)", min_value=0.0, value=0.0, step=1.0)
 
     calculate = st.button("💡 Calculate target", type="primary")
 
@@ -99,7 +105,8 @@ if calculate:
         jog_km,
         jog_kph,
         gym_minutes,
-        bike_commute_km,
+        outdoor_minutes,
+        effort_factor,
     )
 
     # ⭐ Emphasised target intake
@@ -123,7 +130,7 @@ if calculate:
 
             **Daily deficit** – Energy gap between your maintenance calories and what you consume. A deficit is required for weight loss.
 
-            **Total activity** – Estimated calories burned through today's recorded activities (steps, jogging, gym, etc.).
+            **Total activity** – Estimated calories burned through today's recorded activities (steps, jogging, gym, cycling, etc.).
             """
         )
 
@@ -158,5 +165,5 @@ if calculate:
     with st.expander("🔍 Full breakdown"):
         st.json(breakdown)
 
-# ------------------- Footer ------------------- -------------------
+# ------------------- Footer -------------------
 st.caption("Made with ❤️ using Streamlit | Calculations are estimates and should not be taken as medical advice.")
