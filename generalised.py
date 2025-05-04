@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import altair as alt  # NEW: for horizontal bar chart
+import altair as alt
 from math import ceil
 
 st.set_page_config(
@@ -9,6 +9,7 @@ st.set_page_config(
     layout="centered",
 )
 
+# ------------------- Global Style Tweaks -------------------
 st.markdown(
     """
     <style>
@@ -21,22 +22,20 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-################################################################################
-# Core calculation function
-################################################################################
+# ------------------- Core calculation -------------------
 
 def calorie_target(
-    weight,
-    target_weight,
-    rate_per_week,
-    steps=0,
-    zwift_minutes=0,
-    jog_km=0,
-    jog_kph=11.0,
-    gym_minutes=0,
-    bike_commute_km=0,
+    weight: float,
+    target_weight: float,
+    rate_per_week: float,
+    steps: int = 0,
+    zwift_minutes: int = 0,
+    jog_km: float = 0.0,
+    jog_kph: float = 11.0,
+    gym_minutes: int = 0,
+    bike_commute_km: float = 0.0,
 ):
-    """Return suggested intake, BMR and a dict breakdown."""
+    """Return suggested intake, BMR and breakdown dict."""
 
     bmr = 22 * weight
     maintenance = bmr * 1.45
@@ -44,10 +43,10 @@ def calorie_target(
     weekly_deficit = 7700 * rate_per_week
     daily_deficit = weekly_deficit / 7
 
+    # Activity burns
     step_burn = 0.04 * steps
     zwift_burn = 8 * zwift_minutes
-    jog_base_burn_per_km = 65
-    jog_burn = jog_km * jog_base_burn_per_km * (jog_kph / 11.0)
+    jog_burn = jog_km * 65 * (jog_kph / 11.0)
     gym_burn = 6 * gym_minutes
     commute_burn = 25 * (bike_commute_km / 2)
 
@@ -71,60 +70,48 @@ def calorie_target(
         },
     )
 
-################################################################################
-# UI – sidebar for inputs, main area for outputs
-################################################################################
-
+# ------------------- Sidebar Inputs -------------------
 with st.sidebar:
     st.header("📝 Enter your details")
     weight = st.number_input("Current weight (kg)", min_value=40.0, max_value=150.0, value=65.0, step=0.5)
-    target_weight = st.number_input(
-        "Target weight (kg)", min_value=40.0, max_value=150.0, value=62.0, step=0.5
-    )
-    rate_per_week = st.slider(
-        "Desired weight loss per week (kg)",
-        min_value=0.1,
-        max_value=1.0,
-        value=0.25,
-        step=0.05,
-    )
+    target_weight = st.number_input("Target weight (kg)", min_value=40.0, max_value=150.0, value=62.0, step=0.5)
+    rate_per_week = st.slider("Desired weight loss per week (kg)", 0.1, 1.0, 0.25, 0.05)
 
     st.divider()
     st.subheader("🏃‍♀️ Today's Activity")
     steps = st.number_input("Steps walked", min_value=0, value=10000, step=500)
     zwift_minutes = st.number_input("Zwift cycling (mins)", min_value=0, value=0, step=5)
     jog_km = st.number_input("Jog distance (km)", min_value=0.0, value=0.0, step=0.5)
-    jog_kph = st.number_input(
-        "Avg jog speed (km/h)", min_value=6.0, max_value=16.0, value=11.0, step=0.5
-    )
+    jog_kph = st.number_input("Avg jog speed (km/h)", min_value=6.0, max_value=16.0, value=11.0, step=0.5)
     gym_minutes = st.number_input("Strength‑training (mins)", min_value=0, value=0, step=5)
-    bike_commute_km = st.number_input(
-        "Bike commute (km)", min_value=0.0, value=0.0, step=1.0
-    )
+    bike_commute_km = st.number_input("Bike commute (km)", min_value=0.0, value=0.0, step=1.0)
 
     calculate = st.button("💡 Calculate target", type="primary")
 
-#############################################
-# Results
-#############################################
-
+# ------------------- Results -------------------
 if calculate:
     target, bmr, breakdown = calorie_target(
-        weight=weight,
-        target_weight=target_weight,
-        rate_per_week=rate_per_week,
-        steps=steps,
-        zwift_minutes=zwift_minutes,
-        jog_km=jog_km,
-        jog_kph=jog_kph,
-        gym_minutes=gym_minutes,
-        bike_commute_km=bike_commute_km,
+        weight,
+        target_weight,
+        rate_per_week,
+        steps,
+        zwift_minutes,
+        jog_km,
+        jog_kph,
+        gym_minutes,
+        bike_commute_km,
+    )
+
+    # ⭐ Emphasised target intake
+    st.markdown(
+        f"<div style='font-size:2.4rem;font-weight:800;color:#dc2626;'>🎯 Target intake: {target} kcal</div>",
+        unsafe_allow_html=True,
     )
 
     col1, col2, col3 = st.columns(3)
-    col1.metric("🎯 Target intake", f"{target} kcal")
-    col2.metric("BMR", f"{bmr} kcal")
-    col3.metric("Daily deficit", f"{breakdown['Daily Deficit']} kcal")
+    col1.metric("🔥 BMR", f"{bmr} kcal")
+    col2.metric("📉 Daily deficit", f"{breakdown['Daily Deficit']} kcal")
+    col3.metric("🚴‍♂️ Total activity", f"{breakdown['Total Activity Burn']} kcal")
 
     if target < bmr:
         st.warning(
@@ -132,17 +119,17 @@ if calculate:
         )
 
     st.divider()
-    st.subheader("📊 Activity burn breakdown")
+    st.subheader("📊 Activity burn breakdown (by activity)")
 
+    # DataFrame excluding Total Activity
     burns_df = pd.DataFrame(
         {
-            "Activity": [k.replace(" Burn", "") for k in breakdown if "Burn" in k],
-            "kcal": [v for k, v in breakdown.items() if "Burn" in k],
+            "Activity": [k.replace(" Burn", "") for k in breakdown if k.endswith("Burn") and k != "Total Activity Burn"],
+            "kcal": [v for k, v in breakdown.items() if k.endswith("Burn") and k != "Total Activity Burn"],
         }
-    ).sort_values("kcal", ascending=True)  # ascending so smallest at top for horiz bar
+    ).sort_values("kcal", ascending=False)
 
-    # Horizontal bar chart using Altair
-    horiz_bars = (
+    chart = (
         alt.Chart(burns_df)
         .mark_bar()
         .encode(
@@ -150,18 +137,12 @@ if calculate:
             y=alt.Y("Activity:N", sort="-x", title="Activity"),
             tooltip=["Activity", "kcal"],
         )
-        .properties(height=250)
+        .properties(height=300)
     )
-    st.altair_chart(horiz_bars, use_container_width=True)
+    st.altair_chart(chart, use_container_width=True)
 
     with st.expander("🔍 Full breakdown"):
         st.json(breakdown)
 
-################################################################################
-# Footer
-################################################################################
-
-with st.container():
-    st.caption(
-        "Made with ❤️ using Streamlit | Calculations are estimates and should not be taken as medical advice."
-    )
+# ------------------- Footer -------------------
+st.caption("Made with ❤️ using Streamlit | Calculations are estimates and should not be taken as medical advice.")
