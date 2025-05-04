@@ -55,6 +55,9 @@ Visit the local URL shown in your terminal (usually `http://localhost:8501`).
 5. Expand the charts and acronym helper as needed.
 
 > **Tip:** A sustainable weight‑loss rate is ~0.25–0.75 kg/week. If the app warns your target is below BMR, consider reducing the rate.
+---
+
+![](target_calorie_calculator.gif)
 
 ---
 ## 🔬 Calculation logic (Mifflin‑St Jeor, simplified)
